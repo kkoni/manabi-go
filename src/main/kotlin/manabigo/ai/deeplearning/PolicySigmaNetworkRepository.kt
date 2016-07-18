@@ -26,10 +26,11 @@ import java.nio.file.Path
 
 @Repository
 class PolicySigmaNetworkRepository @Autowired constructor(
-        @Value("modelDirectory") private val directoryPath: String
+        @Value("\${modelDirectory}") private val directoryPath: String
 ) {
     private val directory: Path
     private val charset = Charset.forName("UTF-8")
+    private val networks: MutableMap<Int, PolicySigmaNetwork> = mutableMapOf()
     private val lock = Object()
 
     init {
@@ -38,18 +39,26 @@ class PolicySigmaNetworkRepository @Autowired constructor(
 
     fun find(boardSize: Int): PolicySigmaNetwork {
         synchronized(lock) {
-            val confFile = getConfFile(boardSize)
-            val binFile = getBinFile(boardSize)
-            if (Files.exists(confFile) && Files.exists(binFile)) {
-                return load(boardSize, confFile, binFile)
-            } else {
-                return create(boardSize)
-            }
+            return networks[boardSize] ?: loadOrCreate(boardSize)
         }
+    }
+
+    private fun loadOrCreate(boardSize: Int): PolicySigmaNetwork {
+        val confFile = getConfFile(boardSize)
+        val binFile = getBinFile(boardSize)
+        val network = if (Files.exists(confFile) && Files.exists(binFile)) {
+            load(boardSize, confFile, binFile)
+        } else {
+            create(boardSize)
+        }
+        networks[boardSize] = network
+        return network
     }
 
     fun store(network: PolicySigmaNetwork): Unit {
         synchronized(lock) {
+            networks[network.boardSize] = network
+
             val confFile = getConfFile(network.boardSize)
             val binFile = getBinFile(network.boardSize)
             val model = network.model

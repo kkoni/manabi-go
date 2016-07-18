@@ -9,12 +9,13 @@ class MovesToLearnSerializer {
     private val pointSerializer = PointSerializer()
 
     fun deserialize(map: Map<String, Any>): MovesToLearn {
-        if (map["moves"] !is List<*> || map["player"] !is String) {
+        if (map["moves"] !is List<*> || map["player"] !is String || map["boardSize"] !is Int) {
             throw IllegalArgumentException("invalid map : $map")
         }
 
         val moves: List<Point> = (map["moves"] as List<Map<String, Any>>).map { pointSerializer.deserialize(it) }
         val player: Stone = stoneSerializer.deserialize(map["player"] as String)
-        return MovesToLearn(moves, player)
+        val boardSize: Int = map["boardSize"] as Int
+        return MovesToLearn(moves, player, boardSize)
     }
 }

@@ -8,10 +8,14 @@ class LearningQueue {
     private val queue: LinkedList<MovesToLearn> = LinkedList()
 
     fun enqueue(movesToLearn: MovesToLearn): Unit {
-        queue.add(movesToLearn)
+        synchronized(queue) {
+            queue.add(movesToLearn)
+        }
     }
 
     fun dequeue(): MovesToLearn? {
-        return queue.pop()
+        synchronized(queue) {
+            return queue.pollFirst()
+        }
     }
 }

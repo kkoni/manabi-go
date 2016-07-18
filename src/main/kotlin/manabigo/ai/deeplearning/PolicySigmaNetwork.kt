@@ -33,4 +33,8 @@ class PolicySigmaNetwork(val model: MultiLayerNetwork, val boardSize: Int) {
         }
         return MoveProbabilities(probabilities, board, player)
     }
+
+    fun clone(): PolicySigmaNetwork {
+        return PolicySigmaNetwork(model.clone(), boardSize)
+    }
 }

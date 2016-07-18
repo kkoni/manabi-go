@@ -161,7 +161,11 @@ GoBoardOperator.prototype.resignedByAi = function() {
                 type: 'POST',
                 contentType: 'application/json',
                 url: this.serverBaseUri + "ai/learn",
-                data: JSON.stringify({moves: this.boardStatus.moves, player: this.player})
+                data: JSON.stringify({
+                    moves: this.boardStatus.moves,
+                    player: this.player,
+                    boardSize: this.boardSize
+                })
             }
         ).done(this.learnPostHandler.bind(this))
     }
