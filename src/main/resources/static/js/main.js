@@ -5,6 +5,8 @@ var agehamaUi = new AgehamaUi(
 );
 var gameControlUi = new GameControlUi(
     document.getElementById("start-as-black"),
-    document.getElementById("start-as-white")
+    document.getElementById("start-as-white"),
+    document.getElementById("resigned-by-player"),
+    document.getElementById("resigned-by-ai")
 );
 var goBoardOperator = new GoBoardOperator(9, go9Board, agehamaUi, gameControlUi, "http://localhost:8080/");

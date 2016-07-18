@@ -6,6 +6,7 @@ var GoBoardOperator = function(boardSize, boardUi, agehamaUi, gameControlUi, ser
     this.serverBaseUri = serverBaseUri;
     this.currentBoard = null;
     this.boardStatus = null;
+    this.player = null;
     this.isPlayable = false;
 
     this.drawClearBoard();
@@ -52,6 +53,8 @@ GoBoardOperator.prototype.createInitialBoardHandler = function(startAsBlack) {
         } else {
             this.moveByAi();
         }
+
+        this.gameControlUi.gameStarted();
     }.bind(this)
 };
 
@@ -132,9 +135,38 @@ GoBoardOperator.prototype.applyMove = function(board){
 };
 
 GoBoardOperator.prototype.startAsBlack = function() {
+    this.player = "b";
     this.initializeGame(true);
 };
 
 GoBoardOperator.prototype.startAsWhite = function() {
+    this.player = "w";
     this.initializeGame(false);
+};
+
+GoBoardOperator.prototype.resignedByPlayer = function() {
+    if (this.isPlayable) {
+        alert("投了しました");
+        this.isPlayable = false;
+        this.gameControlUi.gameEnded();
+    }
+};
+
+GoBoardOperator.prototype.resignedByAi = function() {
+    if (this.isPlayable) {
+        this.isPlayable = false;
+        this.gameControlUi.gameEnded();
+        $.ajax(
+            {
+                type: 'POST',
+                contentType: 'application/json',
+                url: this.serverBaseUri + "ai/learn",
+                data: JSON.stringify({moves: this.boardStatus.moves, player: this.player})
+            }
+        ).done(this.learnPostHandler.bind(this))
+    }
+};
+
+GoBoardOperator.prototype.learnPostHandler = function(data) {
+    alert("手順をAIに送信しました")
 };
