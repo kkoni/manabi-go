@@ -1,8 +1,10 @@
-var Go9BoardOperator = function(boardUi, serverBaseUri) {
+var Go9BoardOperator = function(boardUi, agehamaUi, serverBaseUri) {
     this.boardUi = boardUi;
+    this.agehamaUi = agehamaUi;
     this.serverBaseUri = serverBaseUri;
     this.currentBoard = null;
     this.isPlayable = true;
+    this.boardStatus = new GoBoardStatus();
 
     this.initialize();
     this.boardUi.addCellClickListener(this.moveByPlayer.bind(this));
@@ -75,6 +77,10 @@ Go9BoardOperator.prototype.playAiHandler = function(data) {
 
 Go9BoardOperator.prototype.applyMove = function(board){
     this.currentBoard = board;
+
+    this.boardStatus.addMove(board.lastMove);
+    this.agehamaUi.update(this.boardStatus.agehamaBlack, this.boardStatus.agehamaWhite);
+
     var point = board.lastMove.point;
     if (point.s == "b") {
         this.boardUi.placeBlack(point.x, point.y)
