@@ -1,11 +1,12 @@
 package manabigo.ai
 
-import manabigo.model.*
+import manabigo.model.Board
+import manabigo.model.MoveResult
+import manabigo.model.Point
+import manabigo.model.Position
 import manabigo.model.Stone.EMPTY
-import org.springframework.stereotype.Component
 import java.util.*
 
-@Component
 class RandomAiPlayer: AiPlayer {
     private val random = Random()
 

@@ -38,6 +38,10 @@ class Board(val points: List<List<Point>>, val lastMove: MoveResult?) {
         }
     }
 
+    fun isRegalMove(move: Point): Boolean {
+        return getMoveResult(move) != null
+    }
+
     fun getNextPlayer(): Stone {
         if (lastMove == null || lastMove.stone == WHITE) {
             return BLACK
