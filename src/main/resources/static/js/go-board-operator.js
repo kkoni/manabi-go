@@ -1,22 +1,61 @@
-var Go9BoardOperator = function(boardUi, agehamaUi, serverBaseUri) {
+var GoBoardOperator = function(boardSize, boardUi, agehamaUi, gameControlUi, serverBaseUri) {
+    this.boardSize = boardSize;
     this.boardUi = boardUi;
     this.agehamaUi = agehamaUi;
+    this.gameControlUi = gameControlUi;
     this.serverBaseUri = serverBaseUri;
     this.currentBoard = null;
-    this.isPlayable = true;
-    this.boardStatus = new GoBoardStatus();
+    this.boardStatus = null;
+    this.isPlayable = false;
 
-    this.initialize();
+    this.drawClearBoard();
     this.boardUi.addCellClickListener(this.moveByPlayer.bind(this));
+    this.gameControlUi.addListener(this);
 };
 
-Go9BoardOperator.prototype.initialize = function() {
+GoBoardOperator.prototype.drawClearBoard = function() {
+    for(var x=0; x<this.boardSize; x++) {
+        for(var y=0; y<this.boardSize; y++) {
+            this.boardUi.removeStone(x, y);
+        }
+    }
+};
+
+GoBoardOperator.prototype.initializeGame = function(startAsBlack) {
+    this.isPlayable = false;
     $.ajax(
-        {url: this.serverBaseUri + "initialBoard?size=9"}
-    ).done(this.initialBoardHandler.bind(this));
+        {url: this.serverBaseUri + "initialBoard?size=" + this.boardSize}
+    ).done(this.createInitialBoardHandler(startAsBlack));
 };
 
-Go9BoardOperator.prototype.initialBoardHandler = function(data) {
+GoBoardOperator.prototype.createInitialBoardHandler = function(startAsBlack) {
+    return function(data) {
+        var stones = data.board.stones;
+        for(var x=0; x<stones.length; x++) {
+            for(var y=0; y<stones[x].length; y++) {
+                if (stones[x][y] == "b") {
+                    this.boardUi.placeBlack(x, y);
+                } else if(stones[x][y] == "w") {
+                    this.boardUi.placeWhite(x, y);
+                } else {
+                    this.boardUi.removeStone(x, y);
+                }
+            }
+        }
+        this.currentBoard = data.board;
+
+        this.boardStatus = new GoBoardStatus();
+        this.agehamaUi.update(this.boardStatus.black, this.boardStatus.white);
+
+        if(startAsBlack) {
+            this.isPlayable = true;
+        } else {
+            this.moveByAi();
+        }
+    }.bind(this)
+};
+
+GoBoardOperator.prototype.initialBoardHandler = function(data) {
     var stones = data.board.stones;
     for(var x=0; x<stones.length; x++) {
         for(var y=0; y<stones[x].length; y++) {
@@ -32,7 +71,7 @@ Go9BoardOperator.prototype.initialBoardHandler = function(data) {
     this.currentBoard = data.board;
 };
 
-Go9BoardOperator.prototype.moveByPlayer = function(x, y) {
+GoBoardOperator.prototype.moveByPlayer = function(x, y) {
     if (this.isPlayable) {
         this.isPlayable = false;
         $.ajax(
@@ -46,7 +85,7 @@ Go9BoardOperator.prototype.moveByPlayer = function(x, y) {
     }
 };
 
-Go9BoardOperator.prototype.moveHandler = function(data) {
+GoBoardOperator.prototype.moveHandler = function(data) {
     if (data.success) {
         this.applyMove(data.board);
         this.moveByAi();
@@ -55,7 +94,7 @@ Go9BoardOperator.prototype.moveHandler = function(data) {
     }
 };
 
-Go9BoardOperator.prototype.moveByAi = function() {
+GoBoardOperator.prototype.moveByAi = function() {
     $.ajax(
         {
             type: 'POST',
@@ -66,7 +105,7 @@ Go9BoardOperator.prototype.moveByAi = function() {
     ).done(this.playAiHandler.bind(this));    
 };
 
-Go9BoardOperator.prototype.playAiHandler = function(data) {
+GoBoardOperator.prototype.playAiHandler = function(data) {
     if (data.success) {
         this.applyMove(data.board);
         this.isPlayable = true;
@@ -75,7 +114,7 @@ Go9BoardOperator.prototype.playAiHandler = function(data) {
     }
 };
 
-Go9BoardOperator.prototype.applyMove = function(board){
+GoBoardOperator.prototype.applyMove = function(board){
     this.currentBoard = board;
 
     this.boardStatus.addMove(board.lastMove);
@@ -90,4 +129,12 @@ Go9BoardOperator.prototype.applyMove = function(board){
     board.lastMove.capturedPositions.forEach(function (position) {
         this.boardUi.removeStone(position.x, position.y);
     }.bind(this));
+};
+
+GoBoardOperator.prototype.startAsBlack = function() {
+    this.initializeGame(true);
+};
+
+GoBoardOperator.prototype.startAsWhite = function() {
+    this.initializeGame(false);
 };
